@@ -11,7 +11,7 @@ from app.location.service import LocationService
 
 
 class Container(DeclarativeContainer):
-    wiring_config = WiringConfiguration(packages=["app"])
+    wiring_config = WiringConfiguration(packages=["app"], modules=["app.location.router"])
 
     user_repo = Singleton(UserSQLAlchemyRepo)
     user_repo_adapter = Factory(UserRepositoryAdapter, user_repo=user_repo)

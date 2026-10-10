@@ -8,10 +8,46 @@ from app.location.service import (
     LocationNotFoundException,
     AlreadyLikedException,
 )
-from app.location.schemas import CreateLocationCommand
+from app.location.schemas import CreateLocationCommand, LocationFilter
 from core.fastapi.dependencies import IsAuthenticated, IsAdmin, PermissionDependency
 
 location_router = APIRouter()
+
+@location_router.get("")
+@inject
+async def get_locations(
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    category: str | None = Query(None),
+    min_price: int | None = Query(None),
+    max_price: int | None = Query(None),
+    keyword: str | None = Query(None),
+    sort_by: str | None = Query(None, description="price_asc, price_desc, name, distance"),
+    lat: float | None = Query(None, description="Current latitude for distance sorting/filtering"),
+    lng: float | None = Query(None, description="Current longitude for distance sorting/filtering"),
+    radius: float | None = Query(None, description="Radius in km"),
+    service: LocationService = Depends(Provide[Container.location_service]),
+):
+    filter = LocationFilter(
+        limit=limit,
+        offset=offset,
+        category=category,
+        min_price=min_price,
+        max_price=max_price,
+        keyword=keyword,
+        sort_by=sort_by,
+        lat=lat,
+        lng=lng,
+        radius=radius
+    )
+    return await service.get_locations(filter=filter)
+
+@location_router.get("/categories")
+@inject
+async def get_categories(
+    service: LocationService = Depends(Provide[Container.location_service]),
+):
+    return await service.get_categories()
 
 @location_router.get("/featured")
 @inject
@@ -20,6 +56,17 @@ async def get_featured_locations(
     service: LocationService = Depends(Provide[Container.location_service]),
 ):
     return await service.get_featured(limit=limit)
+
+@location_router.get("/{location_id}")
+@inject
+async def get_location_by_id(
+    location_id: int = Path(...),
+    service: LocationService = Depends(Provide[Container.location_service]),
+):
+    try:
+        return await service.get_by_id(location_id=location_id)
+    except LocationNotFoundException as e:
+        return JSONResponse(status_code=404, content={"message": str(e)})
 
 @location_router.post(
     "",
