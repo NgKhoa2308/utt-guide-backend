@@ -47,3 +47,37 @@ class LocationFilter(BaseModel):
     lat: float | None = None
     lng: float | None = None
     radius: float | None = None
+
+from datetime import datetime
+
+class ReviewCreateCommand(BaseModel):
+    rating: int # 1 to 5
+    content: str | None = None
+
+class ReviewResponseDTO(BaseModel):
+    id: int
+    location_id: int
+    user_id: int
+    rating: int
+    content: str | None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class StatsResponseDTO(BaseModel):
+    total_locations: int
+    total_categories: int
+    most_viewed: list[LocationResponseDTO]
+
+class UpdateLocationCommand(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    address: str | None = None
+    category: str | None = None
+    lat: float | None = None
+    lng: float | None = None
+    photo_url: str | None = None
+    min_price: int | None = None
+    max_price: int | None = None
+    status: LocationStatus | None = None
